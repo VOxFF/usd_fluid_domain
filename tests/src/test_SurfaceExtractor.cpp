@@ -1,5 +1,6 @@
+#include <ufd/SurfaceExtractor.h>
+
 #include <gtest/gtest.h>
-#include "SurfaceExtractor.h"
 
 TEST(SurfaceExtractorTest, ExtractEmptyMeshListReturnsEmptySurface) {
     ufd::SurfaceExtractor extractor;

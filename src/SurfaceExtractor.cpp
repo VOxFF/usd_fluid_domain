@@ -1,4 +1,4 @@
-#include "SurfaceExtractor.h"
+#include <ufd/SurfaceExtractor.h>
 
 #include <pxr/usd/usdGeom/xformCache.h>
 

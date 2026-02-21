@@ -8,14 +8,11 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-add_executable(usd_fluid_domain_tests
-    test_StageReader.cpp
-    test_SurfaceExtractor.cpp
-    test_DomainGenerator.cpp
-)
+add_executable(usd_fluid_domain_tests)
+add_subdirectory(src)
 
 target_link_libraries(usd_fluid_domain_tests
-    PRIVATE usd_fluid_domain_lib
+    PRIVATE ufd
     PRIVATE GTest::gtest_main
 )
 

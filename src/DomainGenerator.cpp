@@ -1,4 +1,4 @@
-#include "DomainGenerator.h"
+#include <ufd/DomainGenerator.h>
 
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/sdf/path.h>

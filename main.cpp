@@ -1,10 +1,10 @@
+#include <ufd/StageReader.h>
+#include <ufd/SurfaceExtractor.h>
+#include <ufd/DomainGenerator.h>
+#include <ufd/DomainConfig.h>
+
 #include <iostream>
 #include <string>
-
-#include "StageReader.h"
-#include "SurfaceExtractor.h"
-#include "DomainGenerator.h"
-#include "DomainConfig.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {

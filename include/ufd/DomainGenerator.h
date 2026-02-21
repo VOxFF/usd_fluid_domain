@@ -1,10 +1,10 @@
 #pragma once
 
+#include <ufd/DomainConfig.h>
+#include <ufd/SurfaceExtractor.h>
+
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/gf/range3d.h>
-
-#include "DomainConfig.h"
-#include "SurfaceExtractor.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

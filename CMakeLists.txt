@@ -10,6 +10,10 @@ find_package(pxr REQUIRED
 )
 
 add_subdirectory(src)
+add_subdirectory(include)
+
+add_executable(usd_fluid_domain main.cpp)
+target_link_libraries(usd_fluid_domain PRIVATE ufd)
 
 option(BUILD_TESTS "Build unit tests" ON)
 if(BUILD_TESTS)

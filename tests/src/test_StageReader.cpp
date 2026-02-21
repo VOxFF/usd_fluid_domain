@@ -1,5 +1,6 @@
+#include <ufd/StageReader.h>
+
 #include <gtest/gtest.h>
-#include "StageReader.h"
 
 TEST(StageReaderTest, OpenInvalidPathReturnsFalse) {
     ufd::StageReader reader;

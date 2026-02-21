@@ -1,5 +1,6 @@
+#include <ufd/DomainGenerator.h>
+
 #include <gtest/gtest.h>
-#include "DomainGenerator.h"
 
 TEST(DomainGeneratorTest, DefaultConfigUsesBox) {
     ufd::DomainConfig config;

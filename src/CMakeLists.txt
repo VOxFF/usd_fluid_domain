@@ -1,32 +1,27 @@
-add_library(usd_fluid_domain_lib STATIC
+add_library(ufd STATIC
     StageReader.cpp
     SurfaceExtractor.cpp
     DomainGenerator.cpp
     DomainConfig.cpp
 )
 
-target_include_directories(usd_fluid_domain_lib
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(ufd
+    PUBLIC ${CMAKE_SOURCE_DIR}/include
 )
 
-target_include_directories(usd_fluid_domain_lib
+target_include_directories(ufd
     SYSTEM PUBLIC ${PXR_INCLUDE_DIRS}
 )
 
-target_compile_definitions(usd_fluid_domain_lib
+target_compile_definitions(ufd
     PUBLIC TBB_SUPPRESS_DEPRECATED_MESSAGES=1
 )
 
-target_compile_options(usd_fluid_domain_lib
+target_compile_options(ufd
     PUBLIC -Wno-deprecated -Wno-cpp
 )
 
-target_link_libraries(usd_fluid_domain_lib
+target_link_libraries(ufd
     PUBLIC usd usdGeom sdf tf vt gf arch
 )
 
-add_executable(usd_fluid_domain main.cpp)
-
-target_link_libraries(usd_fluid_domain
-    PRIVATE usd_fluid_domain_lib
-)
