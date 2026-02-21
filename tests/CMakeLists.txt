@@ -11,6 +11,10 @@ FetchContent_MakeAvailable(googletest)
 add_executable(usd_fluid_domain_tests)
 add_subdirectory(src)
 
+target_compile_definitions(usd_fluid_domain_tests PRIVATE
+    TEST_RESOURCES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"
+)
+
 target_link_libraries(usd_fluid_domain_tests
     PRIVATE ufd
     PRIVATE GTest::gtest_main
