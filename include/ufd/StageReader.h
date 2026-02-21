@@ -13,16 +13,16 @@ namespace ufd {
 class StageReader {
 public:
     // Open a USD stage from a file path.
-    bool Open(const std::string& usdFilePath);
+    bool open(const std::string& usd_file_path);
 
     // Traverse the stage and collect all UsdGeomMesh prims.
-    std::vector<UsdGeomMesh> CollectMeshes() const;
+    std::vector<UsdGeomMesh> collect_meshes() const;
 
     // Access the underlying stage.
-    UsdStageRefPtr GetStage() const { return _stage; }
+    UsdStageRefPtr get_stage() const { return stage_; }
 
 private:
-    UsdStageRefPtr _stage;
+    UsdStageRefPtr stage_;
 };
 
 } // namespace ufd

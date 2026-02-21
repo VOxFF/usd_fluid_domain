@@ -13,41 +13,41 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const std::string inputPath  = argv[1];
-    const std::string outputPath = argv[2];
+    const std::string input_path  = argv[1];
+    const std::string output_path = argv[2];
 
     // 1. Read the input stage
     ufd::StageReader reader;
-    if (!reader.Open(inputPath)) {
-        std::cerr << "Error: cannot open stage " << inputPath << std::endl;
+    if (!reader.open(input_path)) {
+        std::cerr << "Error: cannot open stage " << input_path << std::endl;
         return 1;
     }
 
-    auto meshes = reader.CollectMeshes();
+    auto meshes = reader.collect_meshes();
     if (meshes.empty()) {
         std::cerr << "Warning: no meshes found in stage." << std::endl;
     }
 
     // 2. Extract the combined surface and compute its bounding box
     ufd::SurfaceExtractor extractor;
-    auto surface = extractor.Extract(meshes);
-    auto bounds  = extractor.ComputeBoundingBox(surface);
+    auto surface = extractor.extract(meshes);
+    auto bounds  = extractor.compute_bounding_box(surface);
 
     // 3. Generate the fluid domain
     ufd::DomainConfig config;
     ufd::DomainGenerator generator(config);
 
-    auto outputStage = pxr::UsdStage::CreateNew(outputPath);
-    if (!outputStage) {
-        std::cerr << "Error: cannot create output stage " << outputPath
+    auto output_stage = pxr::UsdStage::CreateNew(output_path);
+    if (!output_stage) {
+        std::cerr << "Error: cannot create output stage " << output_path
                   << std::endl;
         return 1;
     }
 
-    auto domainPath = generator.Generate(outputStage, bounds);
-    outputStage->GetRootLayer()->Save();
+    auto domain_path = generator.generate(output_stage, bounds);
+    output_stage->GetRootLayer()->Save();
 
-    std::cout << "Domain written to " << outputPath
-              << " at " << domainPath << std::endl;
+    std::cout << "Domain written to " << output_path
+              << " at " << domain_path << std::endl;
     return 0;
 }

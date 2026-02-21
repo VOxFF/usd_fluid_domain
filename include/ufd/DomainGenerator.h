@@ -17,15 +17,15 @@ public:
     // Generate the far-field domain mesh on the given stage based on
     // the bounding box of the object surface.
     // Returns the prim path of the created domain mesh.
-    std::string Generate(UsdStageRefPtr stage,
-                         const GfRange3d& objectBounds) const;
+    std::string generate(UsdStageRefPtr stage,
+                         const GfRange3d& object_bounds) const;
 
 private:
-    DomainConfig _config;
+    DomainConfig config_;
 
-    void _GenerateBox(UsdStageRefPtr stage,
-                      const GfRange3d& domainBounds,
-                      const std::string& primPath) const;
+    void generate_box(UsdStageRefPtr stage,
+                      const GfRange3d& domain_bounds,
+                      const std::string& prim_path) const;
 };
 
 } // namespace ufd

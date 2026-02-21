@@ -2,7 +2,7 @@
 
 namespace ufd {
 
-bool DomainConfig::LoadFromFile(const std::string& /*path*/) {
+bool DomainConfig::load_from_file(const std::string& /*path*/) {
     // TODO: parse config file
     return false;
 }

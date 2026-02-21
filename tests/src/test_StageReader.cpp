@@ -4,11 +4,11 @@
 
 TEST(StageReaderTest, OpenInvalidPathReturnsFalse) {
     ufd::StageReader reader;
-    EXPECT_FALSE(reader.Open("/nonexistent/path.usd"));
+    EXPECT_FALSE(reader.open("/nonexistent/path.usd"));
 }
 
 TEST(StageReaderTest, CollectMeshesOnClosedStageReturnsEmpty) {
     ufd::StageReader reader;
-    auto meshes = reader.CollectMeshes();
+    auto meshes = reader.collect_meshes();
     EXPECT_TRUE(meshes.empty());
 }

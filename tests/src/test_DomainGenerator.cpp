@@ -9,5 +9,5 @@ TEST(DomainGeneratorTest, DefaultConfigUsesBox) {
 
 TEST(DomainGeneratorTest, DefaultExtentMultiplierIsTen) {
     ufd::DomainConfig config;
-    EXPECT_DOUBLE_EQ(config.extentMultiplier, 10.0);
+    EXPECT_DOUBLE_EQ(config.extent_multiplier, 10.0);
 }

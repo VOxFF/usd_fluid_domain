@@ -11,18 +11,18 @@ namespace ufd {
 
 struct SurfaceData {
     VtVec3fArray points;
-    VtIntArray   faceVertexCounts;
-    VtIntArray   faceVertexIndices;
+    VtIntArray   face_vertex_counts;
+    VtIntArray   face_vertex_indices;
 };
 
 class SurfaceExtractor {
 public:
     // Extract and merge the surface from a set of UsdGeomMesh prims
     // into a single combined surface representation.
-    SurfaceData Extract(const std::vector<UsdGeomMesh>& meshes) const;
+    SurfaceData extract(const std::vector<UsdGeomMesh>& meshes) const;
 
     // Compute the axis-aligned bounding box of the extracted surface.
-    GfRange3d ComputeBoundingBox(const SurfaceData& surface) const;
+    GfRange3d compute_bounding_box(const SurfaceData& surface) const;
 };
 
 } // namespace ufd

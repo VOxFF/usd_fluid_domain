@@ -17,16 +17,16 @@ struct DomainConfig {
 
     // Multiplier applied to the bounding-box extents of the object
     // to determine the far-field boundary size.
-    double extentMultiplier = 10.0;
+    double extent_multiplier = 10.0;
 
     // Manual offset of the domain origin relative to the object centroid.
-    GfVec3d originOffset{0.0, 0.0, 0.0};
+    GfVec3d origin_offset{0.0, 0.0, 0.0};
 
     // When true, generate only half the domain (symmetry about the XZ plane).
-    bool symmetryY = false;
+    bool symmetry_y = false;
 
     // Parse config from a simple key=value file. Returns true on success.
-    bool LoadFromFile(const std::string& path);
+    bool load_from_file(const std::string& path);
 };
 
 } // namespace ufd

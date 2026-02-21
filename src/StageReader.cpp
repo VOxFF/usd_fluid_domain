@@ -4,18 +4,18 @@
 
 namespace ufd {
 
-bool StageReader::Open(const std::string& usdFilePath) {
-    _stage = UsdStage::Open(usdFilePath);
-    return static_cast<bool>(_stage);
+bool StageReader::open(const std::string& usd_file_path) {
+    stage_ = UsdStage::Open(usd_file_path);
+    return static_cast<bool>(stage_);
 }
 
-std::vector<UsdGeomMesh> StageReader::CollectMeshes() const {
+std::vector<UsdGeomMesh> StageReader::collect_meshes() const {
     std::vector<UsdGeomMesh> meshes;
-    if (!_stage) {
+    if (!stage_) {
         return meshes;
     }
 
-    for (const auto& prim : _stage->Traverse()) {
+    for (const auto& prim : stage_->Traverse()) {
         if (prim.IsA<UsdGeomMesh>()) {
             meshes.emplace_back(prim);
         }
