@@ -25,6 +25,7 @@ TEST(SurfaceExtractorTest, ExtractBoxMeshReturnsEightPoints) {
     ufd::StageReader reader;
     reader.open(BOX_USD);
     auto meshes = reader.collect_meshes();
+    ASSERT_EQ(meshes.size(), 1);
 
     ufd::SurfaceExtractor extractor;
     auto surface = extractor.extract(meshes);
