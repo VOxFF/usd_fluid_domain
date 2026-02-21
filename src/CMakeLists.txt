@@ -7,7 +7,18 @@ add_library(usd_fluid_domain_lib STATIC
 
 target_include_directories(usd_fluid_domain_lib
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-    PUBLIC ${PXR_INCLUDE_DIRS}
+)
+
+target_include_directories(usd_fluid_domain_lib
+    SYSTEM PUBLIC ${PXR_INCLUDE_DIRS}
+)
+
+target_compile_definitions(usd_fluid_domain_lib
+    PUBLIC TBB_SUPPRESS_DEPRECATED_MESSAGES=1
+)
+
+target_compile_options(usd_fluid_domain_lib
+    PUBLIC -Wno-deprecated -Wno-cpp
 )
 
 target_link_libraries(usd_fluid_domain_lib
