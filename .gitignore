@@ -1,5 +1,8 @@
-# Build direcroty
+# Build directory
 build/
+
+# IDE
+.vscode/
 
 # Prerequisites
 *.d
