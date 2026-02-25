@@ -2,6 +2,11 @@
 
 #include <pxr/usd/usdGeom/xformCache.h>
 
+#define UFD_DEBUG_TRANSFORMS
+#ifdef UFD_DEBUG_TRANSFORMS
+#include <iostream>
+#endif
+
 namespace ufd {
 
 SurfaceData SurfaceExtractor::extract(
@@ -21,6 +26,11 @@ SurfaceData SurfaceExtractor::extract(
 
         GfMatrix4d world_xform =
             xform_cache.GetLocalToWorldTransform(mesh.GetPrim());
+
+#ifdef UFD_DEBUG_TRANSFORMS
+        std::cerr << "[SurfaceExtractor] " << mesh.GetPrim().GetPath()
+                  << "\n  world_xform:\n" << world_xform << "\n";
+#endif
 
         int point_offset = static_cast<int>(result.points.size());
 

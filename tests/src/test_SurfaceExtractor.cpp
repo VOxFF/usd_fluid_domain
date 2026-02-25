@@ -5,6 +5,10 @@
 
 static const std::string BOX_USD =
     std::string(TEST_RESOURCES_DIR) + "/box.usda";
+static const std::string BOX_X2_DISJOINT_USD =
+    std::string(TEST_RESOURCES_DIR) + "/box_x2_disjoint.usda";
+static const std::string BOX_X2_INTERSECTED_USD =
+    std::string(TEST_RESOURCES_DIR) + "/box_x2_intersected.usda";
 
 TEST(SurfaceExtractorTest, ExtractEmptyMeshListReturnsEmptySurface) {
     ufd::SurfaceExtractor extractor;
@@ -42,4 +46,73 @@ TEST(SurfaceExtractorTest, BoundingBoxOfBoxMesh) {
     auto surface = extractor.extract(meshes);
     auto bbox = extractor.compute_bounding_box(surface);
     EXPECT_FALSE(bbox.IsEmpty());
+}
+
+// ---- box_x2_disjoint: two spatially separate boxes ----
+// Each mesh has 8 points and 12 triangles; after world-transform the merged
+// surface spans [0,10]^3 (the xform translates cancel the local offsets).
+
+TEST(SurfaceExtractorTest, ExtractDisjointMeshesReturnsSixteenPoints) {
+    ufd::StageReader reader;
+    reader.open(BOX_X2_DISJOINT_USD);
+    auto meshes = reader.collect_meshes();
+    ASSERT_EQ(meshes.size(), 2);
+
+    ufd::SurfaceExtractor extractor;
+    auto surface = extractor.extract(meshes);
+    EXPECT_EQ(surface.points.size(), 16);
+    EXPECT_EQ(surface.face_vertex_counts.size(), 24);
+    EXPECT_EQ(surface.face_vertex_indices.size(), 72); // 24 tris * 3 verts
+}
+
+TEST(SurfaceExtractorTest, BoundingBoxOfDisjointMeshes) {
+    ufd::StageReader reader;
+    reader.open(BOX_X2_DISJOINT_USD);
+    auto meshes = reader.collect_meshes();
+
+    ufd::SurfaceExtractor extractor;
+    auto surface = extractor.extract(meshes);
+    auto bbox = extractor.compute_bounding_box(surface);
+
+    EXPECT_FALSE(bbox.IsEmpty());
+    EXPECT_NEAR(bbox.GetMin()[0],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMin()[1],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMin()[2],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[0], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[1], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[2], 10.0, 1e-5);
+}
+
+// ---- box_x2_intersected: two overlapping boxes ----
+// Same mesh structure as disjoint; the world-space extent is again [0,10]^3.
+
+TEST(SurfaceExtractorTest, ExtractIntersectedMeshesReturnsSixteenPoints) {
+    ufd::StageReader reader;
+    reader.open(BOX_X2_INTERSECTED_USD);
+    auto meshes = reader.collect_meshes();
+    ASSERT_EQ(meshes.size(), 2);
+
+    ufd::SurfaceExtractor extractor;
+    auto surface = extractor.extract(meshes);
+    EXPECT_EQ(surface.points.size(), 16);
+    EXPECT_EQ(surface.face_vertex_counts.size(), 24);
+    EXPECT_EQ(surface.face_vertex_indices.size(), 72);
+}
+
+TEST(SurfaceExtractorTest, BoundingBoxOfIntersectedMeshes) {
+    ufd::StageReader reader;
+    reader.open(BOX_X2_INTERSECTED_USD);
+    auto meshes = reader.collect_meshes();
+
+    ufd::SurfaceExtractor extractor;
+    auto surface = extractor.extract(meshes);
+    auto bbox = extractor.compute_bounding_box(surface);
+
+    EXPECT_FALSE(bbox.IsEmpty());
+    EXPECT_NEAR(bbox.GetMin()[0],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMin()[1],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMin()[2],  0.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[0], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[1], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[2], 10.0, 1e-5);
 }

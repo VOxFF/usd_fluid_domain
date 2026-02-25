@@ -4,6 +4,9 @@ build/
 # IDE
 .vscode/
 
+# FreeCAD backup files
+*.FCBak
+
 # Prerequisites
 *.d
 
