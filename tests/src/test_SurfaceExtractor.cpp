@@ -49,8 +49,7 @@ TEST(SurfaceExtractorTest, BoundingBoxOfBoxMesh) {
 }
 
 // ---- box_x2_disjoint: two spatially separate boxes ----
-// Each mesh has 8 points and 12 triangles; after world-transform the merged
-// surface spans [0,10]^3 (the xform translates cancel the local offsets).
+// box1 at [0,10]^3, box2 translated by (11,11,11) -> [11,21]^3, no overlap.
 
 TEST(SurfaceExtractorTest, ExtractDisjointMeshesReturnsSixteenPoints) {
     ufd::StageReader reader;
@@ -74,17 +73,18 @@ TEST(SurfaceExtractorTest, BoundingBoxOfDisjointMeshes) {
     auto surface = extractor.extract(meshes);
     auto bbox = extractor.compute_bounding_box(surface);
 
+    // box1 at [0,10]^3, box2 translated by (11,11,11) -> [11,21]^3
     EXPECT_FALSE(bbox.IsEmpty());
     EXPECT_NEAR(bbox.GetMin()[0],  0.0, 1e-5);
     EXPECT_NEAR(bbox.GetMin()[1],  0.0, 1e-5);
     EXPECT_NEAR(bbox.GetMin()[2],  0.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[0], 10.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[1], 10.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[2], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[0], 21.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[1], 21.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[2], 21.0, 1e-5);
 }
 
 // ---- box_x2_intersected: two overlapping boxes ----
-// Same mesh structure as disjoint; the world-space extent is again [0,10]^3.
+// box1 at [0,10]^3, box2 translated by (5,5,5) -> [5,15]^3, 5-unit overlap.
 
 TEST(SurfaceExtractorTest, ExtractIntersectedMeshesReturnsSixteenPoints) {
     ufd::StageReader reader;
@@ -108,11 +108,12 @@ TEST(SurfaceExtractorTest, BoundingBoxOfIntersectedMeshes) {
     auto surface = extractor.extract(meshes);
     auto bbox = extractor.compute_bounding_box(surface);
 
+    // box1 at [0,10]^3, box2 translated by (5,5,5) -> [5,15]^3, overlapping
     EXPECT_FALSE(bbox.IsEmpty());
     EXPECT_NEAR(bbox.GetMin()[0],  0.0, 1e-5);
     EXPECT_NEAR(bbox.GetMin()[1],  0.0, 1e-5);
     EXPECT_NEAR(bbox.GetMin()[2],  0.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[0], 10.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[1], 10.0, 1e-5);
-    EXPECT_NEAR(bbox.GetMax()[2], 10.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[0], 15.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[1], 15.0, 1e-5);
+    EXPECT_NEAR(bbox.GetMax()[2], 15.0, 1e-5);
 }

@@ -2,7 +2,7 @@
 
 #include <pxr/usd/usdGeom/xformCache.h>
 
-#define UFD_DEBUG_TRANSFORMS
+//#define UFD_DEBUG_TRANSFORMS
 #ifdef UFD_DEBUG_TRANSFORMS
 #include <iostream>
 #endif
