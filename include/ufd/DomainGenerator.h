@@ -26,6 +26,13 @@ private:
     void generate_box(UsdStageRefPtr stage,
                       const GfRange3d& domain_bounds,
                       const std::string& prim_path) const;
+
+    void generate_cylinder(UsdStageRefPtr stage,
+                           const GfVec3d& center,
+                           const GfVec3d& axis,
+                           double radius,
+                           double half_length,
+                           const std::string& prim_path) const;
 };
 
 } // namespace ufd
