@@ -2,6 +2,7 @@
 #include <ufd/SurfaceExtractor.h>
 #include <ufd/DomainGenerator.h>
 #include <ufd/DomainConfig.h>
+#include <ufd/StageComposer.h>
 
 #include <iostream>
 #include <string>
@@ -33,21 +34,34 @@ int main(int argc, char* argv[]) {
     auto surface = extractor.extract(meshes);
     auto bounds  = extractor.compute_bounding_box(surface);
 
-    // 3. Generate the fluid domain
+    // 3. Generate the fluid domain into its own layer
+    const std::string domain_path = output_path + ".domain.usda";
+
     ufd::DomainConfig config;
     ufd::DomainGenerator generator(config);
 
-    auto output_stage = pxr::UsdStage::CreateNew(output_path);
-    if (!output_stage) {
-        std::cerr << "Error: cannot create output stage " << output_path
+    auto domain_stage = pxr::UsdStage::CreateNew(domain_path);
+    if (!domain_stage) {
+        std::cerr << "Error: cannot create domain stage " << domain_path
                   << std::endl;
         return 1;
     }
 
-    auto domain_path = generator.generate(output_stage, bounds);
-    output_stage->GetRootLayer()->Save();
+    generator.generate(domain_stage, bounds);
 
-    std::cout << "Domain written to " << output_path
-              << " at " << domain_path << std::endl;
+    // 4. Compose input geometry and domain into a root layer
+    ufd::StageComposer composer(output_path);
+    composer.add_component(ufd::ComponentType::InputGeometry,
+                           reader.get_stage());
+    composer.add_component(ufd::ComponentType::FluidDomain, domain_stage);
+
+    if (!composer.write()) {
+        std::cerr << "Error: cannot write composed stage " << output_path
+                  << std::endl;
+        return 1;
+    }
+
+    std::cout << "Written: " << domain_path << std::endl;
+    std::cout << "Written: " << output_path << std::endl;
     return 0;
 }

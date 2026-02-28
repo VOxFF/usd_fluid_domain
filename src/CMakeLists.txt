@@ -3,6 +3,7 @@ add_library(ufd STATIC
     SurfaceExtractor.cpp
     DomainGenerator.cpp
     DomainConfig.cpp
+    StageComposer.cpp
 )
 
 target_include_directories(ufd
@@ -22,6 +23,6 @@ target_compile_options(ufd
 )
 
 target_link_libraries(ufd
-    PUBLIC usd usdGeom sdf tf vt gf arch
+    PUBLIC usd usdGeom usdShade sdf tf vt gf arch
 )
 

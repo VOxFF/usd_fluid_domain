@@ -3,4 +3,5 @@ target_sources(ufd PUBLIC
     SurfaceExtractor.h
     DomainGenerator.h
     DomainConfig.h
+    StageComposer.h
 )
