@@ -8,7 +8,7 @@ add_library(ufd STATIC
 )
 
 target_include_directories(ufd
-    PUBLIC ${CMAKE_SOURCE_DIR}/include
+    PUBLIC ${PROJECT_SOURCE_DIR}/include
 )
 
 target_include_directories(ufd
