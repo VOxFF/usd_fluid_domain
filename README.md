@@ -131,6 +131,28 @@ bool write() const;
 | `FluidDomain` | `/FluidDomain` | blue (0.2, 0.5, 0.8), opacity 0.30 |
 | `InputGeometry` | *(unchanged)* | *(none applied)* |
 
+## CLI
+
+The `usd_fluid_domain` executable runs the full pipeline on a USD file:
+
+```sh
+usd_fluid_domain <input.usd> <output.usd>
+```
+
+Three files are written:
+
+| File | Contents |
+|------|----------|
+| `<output.usd>.domain.usda` | Fluid domain mesh (`/FluidDomain`) |
+| `<output.usd>.envelope.usda` | Watertight envelope mesh (`/Envelope`) |
+| `<output.usd>` | Root layer compositing all three components |
+
+Open the root layer in usdview to inspect all components together:
+
+```sh
+usdview output.usd
+```
+
 ## Build
 
 ```sh
