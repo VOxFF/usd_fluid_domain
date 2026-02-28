@@ -1,6 +1,6 @@
 #include <ufd/StageReader.h>
 #include <ufd/SurfaceExtractor.h>
-#include <ufd/DomainGenerator.h>
+#include <ufd/DomainBuilder.h>
 #include <ufd/DomainConfig.h>
 #include <ufd/StageComposer.h>
 
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     const std::string domain_path = output_path + ".domain.usda";
 
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto domain_stage = pxr::UsdStage::CreateNew(domain_path);
     if (!domain_stage) {
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    generator.generate(domain_stage, bounds);
+    builder.build(domain_stage, bounds);
 
     // 4. Compose input geometry and domain into a root layer
     ufd::StageComposer composer(output_path);

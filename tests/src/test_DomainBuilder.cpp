@@ -1,6 +1,6 @@
 #include <ufd/StageReader.h>
 #include <ufd/SurfaceExtractor.h>
-#include <ufd/DomainGenerator.h>
+#include <ufd/DomainBuilder.h>
 
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/sdf/path.h>
@@ -37,19 +37,19 @@ static GfRange3d points_bbox(const UsdGeomMesh& mesh) {
 
 // ---- DomainConfig defaults ----
 
-TEST(DomainGeneratorTest, DefaultConfigUsesBox) {
+TEST(DomainBuilderTest, DefaultConfigUsesBox) {
     ufd::DomainConfig config;
 
     EXPECT_EQ(config.shape, ufd::DomainShape::Box);
 }
 
-TEST(DomainGeneratorTest, DefaultExtentMultiplierIsTen) {
+TEST(DomainBuilderTest, DefaultExtentMultiplierIsTen) {
     ufd::DomainConfig config;
 
     EXPECT_DOUBLE_EQ(config.extent_multiplier, 10.0);
 }
 
-TEST(DomainGeneratorTest, DefaultFlowDirectionIsAlongX) {
+TEST(DomainBuilderTest, DefaultFlowDirectionIsAlongX) {
     ufd::DomainConfig config;
 
     EXPECT_DOUBLE_EQ(config.flow_direction[0], 1.0);
@@ -57,31 +57,31 @@ TEST(DomainGeneratorTest, DefaultFlowDirectionIsAlongX) {
     EXPECT_DOUBLE_EQ(config.flow_direction[2], 0.0);
 }
 
-TEST(DomainGeneratorTest, DefaultCylinderSegmentsIsThirtySix) {
+TEST(DomainBuilderTest, DefaultCylinderSegmentsIsThirtySix) {
     ufd::DomainConfig config;
 
     EXPECT_EQ(config.cylinder_segments, 36);
 }
 
-TEST(DomainGeneratorTest, FlowDirectionIsNormalized) {
+TEST(DomainBuilderTest, FlowDirectionIsNormalized) {
     ufd::DomainConfig config;
     config.flow_direction = GfVec3d(2.0, 0.0, 0.0);
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
 
-    EXPECT_NO_FATAL_FAILURE(generator.generate(stage, box_bounds()));
+    EXPECT_NO_FATAL_FAILURE(builder.build(stage, box_bounds()));
 }
 
-// ---- generate() return value ----
+// ---- build() return value ----
 
-TEST(DomainGeneratorTest, GenerateReturnsFluidDomainPath) {
+TEST(DomainBuilderTest, BuildReturnsFluidDomainPath) {
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
 
     EXPECT_EQ(path, "/FluidDomain");
 }
@@ -91,46 +91,46 @@ TEST(DomainGeneratorTest, GenerateReturnsFluidDomainPath) {
 // half_size = size * 10 * 0.5 = (50,50,50)
 // domain: [-45,55]^3
 
-TEST(DomainGeneratorTest, BoxDomainPrimIsDefinedOnStage) {
+TEST(DomainBuilderTest, BoxDomainPrimIsDefinedOnStage) {
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
 
     EXPECT_TRUE(stage->GetPrimAtPath(SdfPath(path)).IsValid());
 }
 
-TEST(DomainGeneratorTest, BoxDomainHasEightPoints) {
+TEST(DomainBuilderTest, BoxDomainHasEightPoints) {
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     VtVec3fArray pts;
     domain_mesh(stage, path).GetPointsAttr().Get(&pts);
 
     EXPECT_EQ(pts.size(), 8);
 }
 
-TEST(DomainGeneratorTest, BoxDomainHasSixFaces) {
+TEST(DomainBuilderTest, BoxDomainHasSixFaces) {
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     VtIntArray counts;
     domain_mesh(stage, path).GetFaceVertexCountsAttr().Get(&counts);
 
     EXPECT_EQ(counts.size(), 6);
 }
 
-TEST(DomainGeneratorTest, BoxDomainExtentsCorrect) {
+TEST(DomainBuilderTest, BoxDomainExtentsCorrect) {
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     auto bbox = points_bbox(domain_mesh(stage, path));
 
     EXPECT_NEAR(bbox.GetMin()[0], -45.0, 1e-4);
@@ -141,13 +141,13 @@ TEST(DomainGeneratorTest, BoxDomainExtentsCorrect) {
     EXPECT_NEAR(bbox.GetMax()[2],  55.0, 1e-4);
 }
 
-TEST(DomainGeneratorTest, BoxDomainOriginOffsetShiftsExtents) {
+TEST(DomainBuilderTest, BoxDomainOriginOffsetShiftsExtents) {
     ufd::DomainConfig config;
     config.origin_offset = GfVec3d(10.0, 0.0, 0.0);
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     auto bbox = points_bbox(domain_mesh(stage, path));
 
     EXPECT_NEAR(bbox.GetMin()[0], -35.0, 1e-4); // -45 + 10
@@ -161,50 +161,50 @@ TEST(DomainGeneratorTest, BoxDomainOriginOffsetShiftsExtents) {
 // perp corners (0,±5,±5) -> radius = sqrt(50)*10 ≈ 70.711
 // points: 2*36+2 = 74,  faces: 3*36 = 108
 
-TEST(DomainGeneratorTest, CylinderDomainPrimIsDefinedOnStage) {
+TEST(DomainBuilderTest, CylinderDomainPrimIsDefinedOnStage) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
 
     EXPECT_TRUE(stage->GetPrimAtPath(SdfPath(path)).IsValid());
 }
 
-TEST(DomainGeneratorTest, CylinderDomainPointCount) {
+TEST(DomainBuilderTest, CylinderDomainPointCount) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     VtVec3fArray pts;
     domain_mesh(stage, path).GetPointsAttr().Get(&pts);
 
     EXPECT_EQ(pts.size(), 2 * 36 + 2); // 74
 }
 
-TEST(DomainGeneratorTest, CylinderDomainFaceCount) {
+TEST(DomainBuilderTest, CylinderDomainFaceCount) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     VtIntArray counts;
     domain_mesh(stage, path).GetFaceVertexCountsAttr().Get(&counts);
 
     EXPECT_EQ(counts.size(), 3 * 36); // 108: N side quads + 2N cap triangles
 }
 
-TEST(DomainGeneratorTest, CylinderDomainAlongFlowExtentCorrect) {
+TEST(DomainBuilderTest, CylinderDomainAlongFlowExtentCorrect) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     auto bbox = points_bbox(domain_mesh(stage, path));
 
     // centroid X=5, half_length=50 -> [-45, 55]
@@ -212,13 +212,13 @@ TEST(DomainGeneratorTest, CylinderDomainAlongFlowExtentCorrect) {
     EXPECT_NEAR(bbox.GetMax()[0], 5.0 + 50.0, 1e-4);
 }
 
-TEST(DomainGeneratorTest, CylinderDomainCrossFlowRadiusCorrect) {
+TEST(DomainBuilderTest, CylinderDomainCrossFlowRadiusCorrect) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     auto bbox = points_bbox(domain_mesh(stage, path));
 
     const double r = std::sqrt(50.0) * 10.0;
@@ -228,14 +228,14 @@ TEST(DomainGeneratorTest, CylinderDomainCrossFlowRadiusCorrect) {
     EXPECT_NEAR(bbox.GetMax()[2], 5.0 + r, 1e-3);
 }
 
-TEST(DomainGeneratorTest, CylinderSegmentsParameterRespected) {
+TEST(DomainBuilderTest, CylinderSegmentsParameterRespected) {
     ufd::DomainConfig config;
     config.shape = ufd::DomainShape::Cylinder;
     config.cylinder_segments = 16;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateInMemory();
-    auto path = generator.generate(stage, box_bounds());
+    auto path = builder.build(stage, box_bounds());
     VtVec3fArray pts;
     domain_mesh(stage, path).GetPointsAttr().Get(&pts);
 

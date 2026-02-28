@@ -1,4 +1,4 @@
-#include <ufd/DomainGenerator.h>
+#include <ufd/DomainBuilder.h>
 
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/tokens.h>
@@ -9,12 +9,12 @@
 
 namespace ufd {
 
-DomainGenerator::DomainGenerator(const DomainConfig& config)
+DomainBuilder::DomainBuilder(const DomainConfig& config)
     : config_(config) {
     config_.flow_direction.Normalize();
 }
 
-std::string DomainGenerator::generate(
+std::string DomainBuilder::build(
     UsdStageRefPtr stage,
     const GfRange3d& object_bounds) const {
     const GfVec3d domain_center = object_bounds.GetMidpoint()
@@ -28,7 +28,7 @@ std::string DomainGenerator::generate(
         const GfVec3d half_size = size * (config_.extent_multiplier * 0.5);
         const GfRange3d domain_bounds(domain_center - half_size,
                                       domain_center + half_size);
-        generate_box(stage, domain_bounds, prim_path);
+        build_box(stage, domain_bounds, prim_path);
         break;
     }
 
@@ -54,7 +54,7 @@ std::string DomainGenerator::generate(
         }
         radius *= config_.extent_multiplier;
 
-        generate_cylinder(stage, domain_center, f, radius, half_length,
+        build_cylinder(stage, domain_center, f, radius, half_length,
                           prim_path);
         break;
     }
@@ -63,7 +63,7 @@ std::string DomainGenerator::generate(
     return prim_path;
 }
 
-void DomainGenerator::generate_box(
+void DomainBuilder::build_box(
     UsdStageRefPtr stage,
     const GfRange3d& domain_bounds,
     const std::string& prim_path) const {
@@ -107,7 +107,7 @@ void DomainGenerator::generate_box(
     mesh.GetSubdivisionSchemeAttr().Set(UsdGeomTokens->none);
 }
 
-void DomainGenerator::generate_cylinder(
+void DomainBuilder::build_cylinder(
     UsdStageRefPtr stage,
     const GfVec3d& center,
     const GfVec3d& axis,

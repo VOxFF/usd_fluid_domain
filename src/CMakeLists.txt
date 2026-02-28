@@ -1,7 +1,7 @@
 add_library(ufd STATIC
     StageReader.cpp
     SurfaceExtractor.cpp
-    DomainGenerator.cpp
+    DomainBuilder.cpp
     DomainConfig.cpp
     StageComposer.cpp
     EnvelopeBuilder.cpp

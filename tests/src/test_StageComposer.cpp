@@ -1,6 +1,6 @@
 #include <ufd/StageReader.h>
 #include <ufd/SurfaceExtractor.h>
-#include <ufd/DomainGenerator.h>
+#include <ufd/DomainBuilder.h>
 #include <ufd/StageComposer.h>
 
 #include <pxr/usd/sdf/layer.h>
@@ -59,10 +59,10 @@ static UsdStageRefPtr make_domain_stage() {
         extractor.extract(reader.collect_meshes()));
 
     ufd::DomainConfig config;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
 
     auto stage = pxr::UsdStage::CreateNew(DOMAIN_USD);
-    generator.generate(stage, bounds);
+    builder.build(stage, bounds);
     return stage;
 }
 
@@ -175,9 +175,9 @@ TEST(StageComposerTest, TwoDisjointBoxesTightMarginCreatesRootLayer) {
 
     ufd::DomainConfig config;
     config.extent_multiplier = 2.0;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
     auto domain_stage = pxr::UsdStage::CreateNew(DISJOINT_DOMAIN_USD);
-    generator.generate(domain_stage, bounds);
+    builder.build(domain_stage, bounds);
 
     ufd::StageComposer composer(DISJOINT_ROOT_USD);
     composer.add_component(ufd::ComponentType::InputGeometry, input_stage);
@@ -196,9 +196,9 @@ TEST(StageComposerTest, TwoDisjointBoxesTightMarginDomainExtentsCorrect) {
 
     ufd::DomainConfig config;
     config.extent_multiplier = 2.0;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
     auto domain_stage = pxr::UsdStage::CreateNew(DISJOINT_DOMAIN_USD);
-    generator.generate(domain_stage, bounds);
+    builder.build(domain_stage, bounds);
 
     auto input_stage = UsdStage::Open(BOX_X2_DISJOINT_USD);
     ufd::StageComposer composer(DISJOINT_ROOT_USD);
@@ -231,9 +231,9 @@ TEST(StageComposerTest, IntersectedBoxesCylinderDomainCreatesRootLayer) {
     ufd::DomainConfig config;
     config.shape             = ufd::DomainShape::Cylinder;
     config.extent_multiplier = 2.0;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
     auto domain_stage = pxr::UsdStage::CreateNew(INTERSECTED_DOMAIN_USD);
-    generator.generate(domain_stage, bounds);
+    builder.build(domain_stage, bounds);
 
     auto input_stage = UsdStage::Open(BOX_X2_INTERSECTED_USD);
     ufd::StageComposer composer(INTERSECTED_ROOT_USD);
@@ -254,9 +254,9 @@ TEST(StageComposerTest, IntersectedBoxesCylinderDomainAlongFlowExtentCorrect) {
     ufd::DomainConfig config;
     config.shape             = ufd::DomainShape::Cylinder;
     config.extent_multiplier = 2.0;
-    ufd::DomainGenerator generator(config);
+    ufd::DomainBuilder builder(config);
     auto domain_stage = pxr::UsdStage::CreateNew(INTERSECTED_DOMAIN_USD);
-    generator.generate(domain_stage, bounds);
+    builder.build(domain_stage, bounds);
 
     auto input_stage = UsdStage::Open(BOX_X2_INTERSECTED_USD);
     ufd::StageComposer composer(INTERSECTED_ROOT_USD);

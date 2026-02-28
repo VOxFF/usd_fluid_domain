@@ -1,7 +1,7 @@
 target_sources(ufd PUBLIC
     StageReader.h
     SurfaceExtractor.h
-    DomainGenerator.h
+    DomainBuilder.h
     DomainConfig.h
     StageComposer.h
     EnvelopeBuilder.h
