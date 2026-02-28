@@ -1,4 +1,4 @@
-# usd_fluid_domain
+# USD Fluid Domain
 
 C++ library for CFD pre-processing using OpenUSD. Given an input USD scene, it
 builds a fluid simulation domain and a watertight envelope surface, then
