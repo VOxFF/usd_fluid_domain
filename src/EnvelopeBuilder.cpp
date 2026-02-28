@@ -7,16 +7,21 @@
 #include <openvdb/tools/MeshToVolume.h>
 #include <openvdb/tools/VolumeToMesh.h>
 
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/xformCache.h>
+#include <pxr/usd/sdf/path.h>
 
 namespace ufd {
 
 EnvelopeBuilder::EnvelopeBuilder(const EnvelopeConfig& config)
     : config_(config) {}
 
-SurfaceData EnvelopeBuilder::build(
+std::string EnvelopeBuilder::build(
+    UsdStageRefPtr stage,
     const std::vector<UsdGeomMesh>& meshes) const
 {
+    const std::string prim_path = "/Envelope";
     if (meshes.empty()) return {};
 
     openvdb::initialize();
@@ -116,39 +121,48 @@ SurfaceData EnvelopeBuilder::build(
     openvdb::tools::VolumeToMesh mesher(0.0);
     mesher(*sdf);
 
-    // Convert VolumeToMesh output to SurfaceData
-    SurfaceData result;
+    // Collect points
     const size_t npts = mesher.pointListSize();
-    result.points.resize(static_cast<int>(npts));
+    VtVec3fArray points(static_cast<unsigned>(npts));
     const auto& vdb_pts = mesher.pointList();
     for (size_t i = 0; i < npts; ++i) {
-        result.points[static_cast<int>(i)] =
+        points[static_cast<unsigned>(i)] =
             GfVec3f(vdb_pts[i][0], vdb_pts[i][1], vdb_pts[i][2]);
     }
 
+    // Collect face topology
+    VtIntArray face_vertex_counts;
+    VtIntArray face_vertex_indices;
     const auto& pools = mesher.polygonPoolList();
     for (size_t pi = 0; pi < mesher.polygonPoolListSize(); ++pi) {
         const auto& pool = pools[pi];
 
         for (size_t qi = 0; qi < pool.numQuads(); ++qi) {
             const openvdb::Vec4I& q = pool.quad(qi);
-            result.face_vertex_counts.push_back(4);
-            result.face_vertex_indices.push_back(static_cast<int>(q[0]));
-            result.face_vertex_indices.push_back(static_cast<int>(q[1]));
-            result.face_vertex_indices.push_back(static_cast<int>(q[2]));
-            result.face_vertex_indices.push_back(static_cast<int>(q[3]));
+            face_vertex_counts.push_back(4);
+            face_vertex_indices.push_back(static_cast<int>(q[0]));
+            face_vertex_indices.push_back(static_cast<int>(q[1]));
+            face_vertex_indices.push_back(static_cast<int>(q[2]));
+            face_vertex_indices.push_back(static_cast<int>(q[3]));
         }
 
         for (size_t ti = 0; ti < pool.numTriangles(); ++ti) {
             const openvdb::Vec3I& t = pool.triangle(ti);
-            result.face_vertex_counts.push_back(3);
-            result.face_vertex_indices.push_back(static_cast<int>(t[0]));
-            result.face_vertex_indices.push_back(static_cast<int>(t[1]));
-            result.face_vertex_indices.push_back(static_cast<int>(t[2]));
+            face_vertex_counts.push_back(3);
+            face_vertex_indices.push_back(static_cast<int>(t[0]));
+            face_vertex_indices.push_back(static_cast<int>(t[1]));
+            face_vertex_indices.push_back(static_cast<int>(t[2]));
         }
     }
 
-    return result;
+    // Write to stage
+    auto mesh = UsdGeomMesh::Define(stage, SdfPath(prim_path));
+    mesh.GetPointsAttr().Set(points);
+    mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts);
+    mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices);
+    mesh.GetSubdivisionSchemeAttr().Set(UsdGeomTokens->none);
+
+    return prim_path;
 }
 
 } // namespace ufd

@@ -2,6 +2,9 @@
 #include <ufd/SurfaceExtractor.h>
 #include <ufd/EnvelopeBuilder.h>
 
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/sdf/path.h>
 #include <pxr/base/gf/range3d.h>
 #include <pxr/base/gf/vec3f.h>
 
@@ -14,10 +17,17 @@ static const std::string BOX_X2_DISJOINT_USD =
 static const std::string BOX_X2_INTERSECTED_USD =
     std::string(TEST_RESOURCES_DIR) + "/box_x2_intersected.usda";
 
-// Helper: compute AABB over a SurfaceData's points
-static GfRange3d surface_bbox(const ufd::SurfaceData& s) {
+// Helper: get /Envelope mesh from an in-memory stage
+static UsdGeomMesh envelope_mesh(UsdStageRefPtr stage) {
+    return UsdGeomMesh(stage->GetPrimAtPath(SdfPath("/Envelope")));
+}
+
+// Helper: compute AABB over /Envelope mesh points
+static GfRange3d surface_bbox(UsdStageRefPtr stage) {
+    VtVec3fArray pts;
+    envelope_mesh(stage).GetPointsAttr().Get(&pts);
     GfRange3d bbox;
-    for (const auto& p : s.points)
+    for (const auto& p : pts)
         bbox.UnionWith(GfVec3d(p[0], p[1], p[2]));
     return bbox;
 }
@@ -39,10 +49,16 @@ TEST(EnvelopeBuilderTest, SingleBoxReturnsNonEmptySurface) {
     cfg.voxel_size     = 1.0;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    auto path  = ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    EXPECT_FALSE(surface.points.empty());
-    EXPECT_FALSE(surface.face_vertex_counts.empty());
+    VtVec3fArray pts;
+    VtIntArray counts;
+    envelope_mesh(stage).GetPointsAttr().Get(&pts);
+    envelope_mesh(stage).GetFaceVertexCountsAttr().Get(&counts);
+
+    EXPECT_FALSE(pts.empty());
+    EXPECT_FALSE(counts.empty());
 }
 
 TEST(EnvelopeBuilderTest, SingleBoxEnvelopeBBoxContainsInput) {
@@ -54,9 +70,10 @@ TEST(EnvelopeBuilderTest, SingleBoxEnvelopeBBoxContainsInput) {
     cfg.voxel_size     = 0.5;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    auto env_bb = surface_bbox(surface);
+    auto env_bb = surface_bbox(stage);
     auto inp_bb = input_bbox(meshes);
 
     // Envelope must fully wrap the input (surface is at voxel boundary outside)
@@ -79,10 +96,16 @@ TEST(EnvelopeBuilderTest, TwoDisjointBoxesReturnsNonEmptySurface) {
     cfg.voxel_size     = 1.0;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    EXPECT_FALSE(surface.points.empty());
-    EXPECT_FALSE(surface.face_vertex_counts.empty());
+    VtVec3fArray pts;
+    VtIntArray counts;
+    envelope_mesh(stage).GetPointsAttr().Get(&pts);
+    envelope_mesh(stage).GetFaceVertexCountsAttr().Get(&counts);
+
+    EXPECT_FALSE(pts.empty());
+    EXPECT_FALSE(counts.empty());
 }
 
 TEST(EnvelopeBuilderTest, TwoDisjointBoxesEnvelopeBBoxContainsBothInputs) {
@@ -94,9 +117,10 @@ TEST(EnvelopeBuilderTest, TwoDisjointBoxesEnvelopeBBoxContainsBothInputs) {
     cfg.voxel_size     = 0.5;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    auto env_bb = surface_bbox(surface);
+    auto env_bb = surface_bbox(stage);
     auto inp_bb = input_bbox(meshes);
 
     EXPECT_LE(env_bb.GetMin()[0], inp_bb.GetMin()[0] + 1e-3);
@@ -123,10 +147,16 @@ TEST(EnvelopeBuilderTest, ClosingBridgesGapBetweenDisjointBoxes) {
     cfg_closed.voxel_size     = 0.5;
     cfg_closed.hole_threshold = 1.0;
 
-    auto surface_open   = ufd::EnvelopeBuilder(cfg_open).build(meshes);
-    auto surface_closed = ufd::EnvelopeBuilder(cfg_closed).build(meshes);
+    auto stage_open   = pxr::UsdStage::CreateInMemory();
+    auto stage_closed = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg_open).build(stage_open, meshes);
+    ufd::EnvelopeBuilder(cfg_closed).build(stage_closed, meshes);
 
-    EXPECT_NE(surface_open.points.size(), surface_closed.points.size());
+    VtVec3fArray pts_open, pts_closed;
+    envelope_mesh(stage_open).GetPointsAttr().Get(&pts_open);
+    envelope_mesh(stage_closed).GetPointsAttr().Get(&pts_closed);
+
+    EXPECT_NE(pts_open.size(), pts_closed.size());
 }
 
 // ---- Two intersected boxes ----
@@ -140,10 +170,16 @@ TEST(EnvelopeBuilderTest, IntersectedBoxesReturnsNonEmptySurface) {
     cfg.voxel_size     = 0.5;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    EXPECT_FALSE(surface.points.empty());
-    EXPECT_FALSE(surface.face_vertex_counts.empty());
+    VtVec3fArray pts;
+    VtIntArray counts;
+    envelope_mesh(stage).GetPointsAttr().Get(&pts);
+    envelope_mesh(stage).GetFaceVertexCountsAttr().Get(&counts);
+
+    EXPECT_FALSE(pts.empty());
+    EXPECT_FALSE(counts.empty());
 }
 
 TEST(EnvelopeBuilderTest, IntersectedBoxesEnvelopeBBoxContainsInput) {
@@ -155,9 +191,10 @@ TEST(EnvelopeBuilderTest, IntersectedBoxesEnvelopeBBoxContainsInput) {
     cfg.voxel_size     = 0.5;
     cfg.hole_threshold = 0.0;
 
-    auto surface = ufd::EnvelopeBuilder(cfg).build(meshes);
+    auto stage = pxr::UsdStage::CreateInMemory();
+    ufd::EnvelopeBuilder(cfg).build(stage, meshes);
 
-    auto env_bb = surface_bbox(surface);
+    auto env_bb = surface_bbox(stage);
     auto inp_bb = input_bbox(meshes);
 
     EXPECT_LE(env_bb.GetMin()[0], inp_bb.GetMin()[0] + 1e-3);
@@ -170,9 +207,9 @@ TEST(EnvelopeBuilderTest, IntersectedBoxesEnvelopeBBoxContainsInput) {
 
 // ---- Empty input ----
 
-TEST(EnvelopeBuilderTest, EmptyMeshListReturnsEmptySurface) {
-    auto surface = ufd::EnvelopeBuilder().build({});
+TEST(EnvelopeBuilderTest, EmptyMeshListReturnsEmptyPath) {
+    auto stage = pxr::UsdStage::CreateInMemory();
+    auto path  = ufd::EnvelopeBuilder().build(stage, {});
 
-    EXPECT_TRUE(surface.points.empty());
-    EXPECT_TRUE(surface.face_vertex_counts.empty());
+    EXPECT_TRUE(path.empty());
 }

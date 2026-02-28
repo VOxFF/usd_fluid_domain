@@ -1,9 +1,9 @@
 #pragma once
 
-#include <ufd/SurfaceExtractor.h>
-
+#include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/mesh.h>
 
+#include <string>
 #include <vector>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -24,9 +24,11 @@ class EnvelopeBuilder {
 public:
     explicit EnvelopeBuilder(const EnvelopeConfig& config = {});
 
-    // Build the envelope.  Meshes are read with their USD world-space
-    // transforms applied.  Returns an empty SurfaceData if meshes is empty.
-    SurfaceData build(const std::vector<UsdGeomMesh>& meshes) const;
+    // Build the envelope and write a /Envelope UsdGeomMesh to stage.  Meshes
+    // are read with their USD world-space transforms applied.  Returns the
+    // prim path "/Envelope" on success, or an empty string if meshes is empty.
+    std::string build(UsdStageRefPtr stage,
+                      const std::vector<UsdGeomMesh>& meshes) const;
 
 private:
     EnvelopeConfig config_;
