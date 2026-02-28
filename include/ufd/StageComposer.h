@@ -12,10 +12,11 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace ufd {
 
 // Defines the role of each component within the composed stage.
-// Values determine sublayer strength — higher value = stronger (wins conflicts).
+// Declaration order determines sublayer strength — later = stronger (wins conflicts).
 enum class ComponentType {
-    InputGeometry = 0,  // original scene, already on disk — not re-saved
-    FluidDomain   = 1,  // generated layer — saved on write()
+    InputGeometry,  // original scene, already on disk — not re-saved
+    FluidDomain,    // generated layer — saved on write()
+    Envelope,       // watertight outer surface — saved on write()
 };
 
 class StageComposer {

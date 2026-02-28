@@ -11,6 +11,7 @@
 #include <pxr/base/vt/value.h>
 
 #include <algorithm>
+#include <unordered_map>
 
 namespace ufd {
 
@@ -21,16 +22,26 @@ struct MaterialStyle {
     float   opacity;
 };
 
-// Returns the visual style for a given component type, or nullopt if
-// no material should be applied.
+// Maps each component type to the root prim path it authors on its stage.
+const std::unordered_map<ComponentType, std::string> k_prim_paths = {
+    {ComponentType::FluidDomain, "/FluidDomain"},
+    {ComponentType::Envelope,    "/Envelope"},
+};
+
+// Maps each component type to its visual material style.
+const std::unordered_map<ComponentType, MaterialStyle> k_styles = {
+    {ComponentType::FluidDomain, {GfVec3f(0.2f, 0.5f, 0.8f), 0.3f}},
+    {ComponentType::Envelope,    {GfVec3f(0.2f, 0.8f, 0.2f), 0.75f}},
+};
+
+std::string prim_path_for(ComponentType type) {
+    auto it = k_prim_paths.find(type);
+    return it != k_prim_paths.end() ? it->second : "";
+}
+
 std::optional<MaterialStyle> style_for(ComponentType type) {
-    switch (type) {
-    case ComponentType::FluidDomain:
-        return MaterialStyle{GfVec3f(0.2f, 0.5f, 0.8f), 0.3f};
-    case ComponentType::InputGeometry:
-        return std::nullopt;
-    }
-    return std::nullopt;
+    auto it = k_styles.find(type);
+    return it != k_styles.end() ? std::optional{it->second} : std::nullopt;
 }
 
 } // namespace
@@ -75,7 +86,7 @@ bool StageComposer::write() const {
     // Apply materials and save all non-InputGeometry component layers
     for (const auto& [type, stage] : components_) {
         if (type != ComponentType::InputGeometry) {
-            apply_material(type, stage, "/FluidDomain");
+            apply_material(type, stage, prim_path_for(type));
             stage->GetRootLayer()->Save();
         }
     }
