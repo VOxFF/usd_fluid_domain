@@ -4,4 +4,5 @@ target_sources(ufd PUBLIC
     DomainGenerator.h
     DomainConfig.h
     StageComposer.h
+    EnvelopeBuilder.h
 )

@@ -9,6 +9,9 @@ find_package(pxr REQUIRED
     HINTS $ENV{USD_ROOT} ${USD_ROOT}
 )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(OpenVDB REQUIRED)
+
 add_subdirectory(src)
 add_subdirectory(include)
 

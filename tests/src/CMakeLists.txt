@@ -3,4 +3,5 @@ target_sources(usd_fluid_domain_tests PRIVATE
     test_SurfaceExtractor.cpp
     test_DomainGenerator.cpp
     test_StageComposer.cpp
+    test_EnvelopeBuilder.cpp
 )
