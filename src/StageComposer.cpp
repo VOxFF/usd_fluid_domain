@@ -26,6 +26,7 @@ struct MaterialStyle {
 const std::unordered_map<ComponentType, std::string> k_prim_paths = {
     {ComponentType::FluidDomain, "/FluidDomain"},
     {ComponentType::Envelope,    "/Envelope"},
+    {ComponentType::CfdResults,  "/FluidParticles"},
 };
 
 // Maps each component type to its visual material style.
@@ -83,9 +84,10 @@ void StageComposer::apply_material(ComponentType type,
 }
 
 bool StageComposer::write() const {
-    // Apply materials and save all non-InputGeometry component layers
+    // Apply materials and save generated layers; skip externally-managed ones
     for (const auto& [type, stage] : components_) {
-        if (type != ComponentType::InputGeometry) {
+        if (type != ComponentType::InputGeometry &&
+            type != ComponentType::CfdResults) {
             apply_material(type, stage, prim_path_for(type));
             stage->GetRootLayer()->Save();
         }

@@ -17,6 +17,7 @@ enum class ComponentType {
     InputGeometry,  // original scene, already on disk — not re-saved
     FluidDomain,    // generated layer — saved on write()
     Envelope,       // watertight outer surface — saved on write()
+    CfdResults,     // solver output, already on disk — not re-saved
 };
 
 class StageComposer {
