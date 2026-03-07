@@ -2,10 +2,13 @@
 
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/Composite.h>
+#include <openvdb/tools/Dense.h>
 #include <openvdb/tools/LevelSetFilter.h>
 #include <openvdb/tools/LevelSetRebuild.h>
 #include <openvdb/tools/MeshToVolume.h>
 #include <openvdb/tools/VolumeToMesh.h>
+
+#include <fstream>
 
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/tokens.h>
@@ -19,7 +22,8 @@ EnvelopeBuilder::EnvelopeBuilder(const EnvelopeConfig& config)
 
 std::string EnvelopeBuilder::build(
     UsdStageRefPtr stage,
-    const std::vector<UsdGeomMesh>& meshes) const
+    const std::vector<UsdGeomMesh>& meshes,
+    const std::string& sdf_path) const
 {
     const std::string prim_path = "/Envelope";
     if (meshes.empty()) return {};
@@ -117,6 +121,45 @@ std::string EnvelopeBuilder::build(
         sdf = openvdb::tools::levelSetRebuild(*sdf, 0.0f, half_band, half_band);
     }
 
+    // Optionally save the SDF as a raw binary for Python (no pyopenvdb needed).
+    // Format: int32 nx,ny,nz  float32 ox,oy,oz,voxel_size,background  then nx*ny*nz float32
+    // Dense<LayoutZYX>: data[ix*ny*nz + iy*nz + iz] = value at (ix,iy,iz), C-order.
+    if (!sdf_path.empty()) {
+        try {
+            openvdb::CoordBBox bbox = sdf->evalActiveVoxelBoundingBox();
+            openvdb::tools::Dense<float, openvdb::tools::LayoutZYX> dense(bbox);
+            openvdb::tools::copyToDense(*sdf, dense);
+
+            const int32_t nx = bbox.dim().x();
+            const int32_t ny = bbox.dim().y();
+            const int32_t nz = bbox.dim().z();
+            const float   ox = static_cast<float>(bbox.min().x()) * vox;
+            const float   oy = static_cast<float>(bbox.min().y()) * vox;
+            const float   oz = static_cast<float>(bbox.min().z()) * vox;
+            const float   bg = static_cast<float>(sdf->background());
+
+            std::ofstream out(sdf_path, std::ios::binary);
+            if (!out) throw std::runtime_error("cannot open " + sdf_path);
+
+            const auto write = [&out](const void* p, std::streamsize n) {
+                out.write(reinterpret_cast<const char*>(p), n);
+            };
+            write(&nx,  4);
+            write(&ny,  4);
+            write(&nz,  4);
+            write(&ox,  4);
+            write(&oy,  4);
+            write(&oz,  4);
+            write(&vox, 4);
+            write(&bg,  4);
+            write(dense.data(), static_cast<std::streamsize>(nx) * ny * nz * 4);
+            std::cerr << "EnvelopeBuilder: saved SDF binary to " << sdf_path
+                      << " (" << nx << "x" << ny << "x" << nz << ")\n";
+        } catch (const std::exception& e) {
+            std::cerr << "EnvelopeBuilder: failed to save SDF: " << e.what() << "\n";
+        }
+    }
+
     // Iso-surface the SDF at the zero level set
     openvdb::tools::VolumeToMesh mesher(0.0);
     mesher(*sdf);
@@ -137,21 +180,22 @@ std::string EnvelopeBuilder::build(
     for (size_t pi = 0; pi < mesher.polygonPoolListSize(); ++pi) {
         const auto& pool = pools[pi];
 
+        // VolumeToMesh winds polygons with normals pointing inward; reverse to get outward normals.
         for (size_t qi = 0; qi < pool.numQuads(); ++qi) {
             const openvdb::Vec4I& q = pool.quad(qi);
             face_vertex_counts.push_back(4);
-            face_vertex_indices.push_back(static_cast<int>(q[0]));
-            face_vertex_indices.push_back(static_cast<int>(q[1]));
-            face_vertex_indices.push_back(static_cast<int>(q[2]));
             face_vertex_indices.push_back(static_cast<int>(q[3]));
+            face_vertex_indices.push_back(static_cast<int>(q[2]));
+            face_vertex_indices.push_back(static_cast<int>(q[1]));
+            face_vertex_indices.push_back(static_cast<int>(q[0]));
         }
 
         for (size_t ti = 0; ti < pool.numTriangles(); ++ti) {
             const openvdb::Vec3I& t = pool.triangle(ti);
             face_vertex_counts.push_back(3);
-            face_vertex_indices.push_back(static_cast<int>(t[0]));
-            face_vertex_indices.push_back(static_cast<int>(t[1]));
             face_vertex_indices.push_back(static_cast<int>(t[2]));
+            face_vertex_indices.push_back(static_cast<int>(t[1]));
+            face_vertex_indices.push_back(static_cast<int>(t[0]));
         }
     }
 
