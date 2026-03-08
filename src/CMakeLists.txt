@@ -5,6 +5,7 @@ add_library(ufd STATIC
     DomainConfig.cpp
     StageComposer.cpp
     EnvelopeBuilder.cpp
+    EmitterBuilder.cpp
 )
 
 target_include_directories(ufd
