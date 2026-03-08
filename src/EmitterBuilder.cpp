@@ -13,7 +13,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <numeric>
+#include <unordered_map>
 
 namespace ufd {
 
@@ -62,21 +64,18 @@ void EmitterBuilder::build_domain_face(const GfRange3d& bounds,
     const float y1 = static_cast<float>(bounds.GetMax()[1]);
     const float z1 = static_cast<float>(bounds.GetMax()[2]);
 
-    std::array<GfVec3f, 4> corners;
-    switch (config_.face_index) {
-        case 0: corners = {GfVec3f(x0,y0,z0), GfVec3f(x0,y0,z1),
-                           GfVec3f(x0,y1,z1), GfVec3f(x0,y1,z0)}; break; // xmin
-        case 1: corners = {GfVec3f(x1,y0,z0), GfVec3f(x1,y1,z0),
-                           GfVec3f(x1,y1,z1), GfVec3f(x1,y0,z1)}; break; // xmax
-        case 2: corners = {GfVec3f(x0,y0,z0), GfVec3f(x1,y0,z0),
-                           GfVec3f(x1,y0,z1), GfVec3f(x0,y0,z1)}; break; // ymin
-        case 3: corners = {GfVec3f(x0,y1,z0), GfVec3f(x0,y1,z1),
-                           GfVec3f(x1,y1,z1), GfVec3f(x1,y1,z0)}; break; // ymax
-        case 4: corners = {GfVec3f(x0,y0,z0), GfVec3f(x0,y1,z0),
-                           GfVec3f(x1,y1,z0), GfVec3f(x1,y0,z0)}; break; // zmin
-        default:corners = {GfVec3f(x0,y0,z1), GfVec3f(x1,y0,z1),
-                           GfVec3f(x1,y1,z1), GfVec3f(x0,y1,z1)}; break; // zmax
-    }
+    using Corners = std::array<GfVec3f, 4>;
+    const std::array<Corners, 6> faces = {{
+        {GfVec3f(x0,y0,z0), GfVec3f(x0,y0,z1), GfVec3f(x0,y1,z1), GfVec3f(x0,y1,z0)},  // 0 xmin
+        {GfVec3f(x1,y0,z0), GfVec3f(x1,y1,z0), GfVec3f(x1,y1,z1), GfVec3f(x1,y0,z1)},  // 1 xmax
+        {GfVec3f(x0,y0,z0), GfVec3f(x1,y0,z0), GfVec3f(x1,y0,z1), GfVec3f(x0,y0,z1)},  // 2 ymin
+        {GfVec3f(x0,y1,z0), GfVec3f(x0,y1,z1), GfVec3f(x1,y1,z1), GfVec3f(x1,y1,z0)},  // 3 ymax
+        {GfVec3f(x0,y0,z0), GfVec3f(x0,y1,z0), GfVec3f(x1,y1,z0), GfVec3f(x1,y0,z0)},  // 4 zmin
+        {GfVec3f(x0,y0,z1), GfVec3f(x1,y0,z1), GfVec3f(x1,y1,z1), GfVec3f(x0,y1,z1)},  // 5 zmax
+    }};
+
+    const int idx = std::clamp(config_.face_index, 0, 5);
+    const auto& corners = faces[idx];
 
     points  = VtVec3fArray(corners.begin(), corners.end());
     counts  = {4};
@@ -162,8 +161,6 @@ void EmitterBuilder::add_arrow(UsdStageRefPtr     stage,
 std::string EmitterBuilder::build(UsdStageRefPtr   stage,
                                   const GfRange3d& domain_bounds) const
 {
-    if (config_.shape == EmitterShape::Custom) return {};
-
     const std::string prim_path = "/" + config_.name;
 
     VtVec3fArray points;
@@ -171,18 +168,16 @@ std::string EmitterBuilder::build(UsdStageRefPtr   stage,
     VtIntArray   indices;
     GfVec3f      center;
 
-    switch (config_.shape) {
-        case EmitterShape::DomainFace:
-            build_domain_face(domain_bounds, points, counts, indices, center);
-            break;
-        case EmitterShape::Quad:
-            build_quad(points, counts, indices, center);
-            break;
-        case EmitterShape::Circle:
-            build_circle(points, counts, indices, center);
-            break;
-        default: return {};
-    }
+    using BuildFn = std::function<void()>;
+    const std::unordered_map<EmitterShape, BuildFn> builders = {
+        {EmitterShape::DomainFace, [&]{ build_domain_face(domain_bounds, points, counts, indices, center); }},
+        {EmitterShape::Quad,       [&]{ build_quad(points, counts, indices, center); }},
+        {EmitterShape::Circle,     [&]{ build_circle(points, counts, indices, center); }},
+    };
+
+    const auto it = builders.find(config_.shape);
+    if (it == builders.end()) return {};
+    it->second();
 
     if (points.empty()) return {};
 
