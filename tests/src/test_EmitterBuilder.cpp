@@ -149,8 +149,9 @@ TEST(EmitterBuilderTest, QuadBBoxMatchesSize) {
     ufd::EmitterBuilder(cfg).build(stage, k_bounds);
 
     auto bbox = points_bbox(stage);
-    EXPECT_NEAR(bbox.GetMax()[1] - bbox.GetMin()[1], 4.0, 1e-4);  // width in Y
-    EXPECT_NEAR(bbox.GetMax()[2] - bbox.GetMin()[2], 6.0, 1e-4);  // height in Z
+    // direction=(1,0,0): right=(0,0,1) spans Z by width, up=(0,1,0) spans Y by height
+    EXPECT_NEAR(bbox.GetMax()[2] - bbox.GetMin()[2], 4.0, 1e-4);  // width  in Z
+    EXPECT_NEAR(bbox.GetMax()[1] - bbox.GetMin()[1], 6.0, 1e-4);  // height in Y
 }
 
 // ---- Circle ----
