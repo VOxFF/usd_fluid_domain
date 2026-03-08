@@ -27,8 +27,10 @@ public:
     // Build the envelope and write a /Envelope UsdGeomMesh to stage.  Meshes
     // are read with their USD world-space transforms applied.  Returns the
     // prim path "/Envelope" on success, or an empty string if meshes is empty.
+    // sdf_path: if non-empty, the closed SDF is saved as a raw binary for Python.
     std::string build(UsdStageRefPtr stage,
-                      const std::vector<UsdGeomMesh>& meshes) const;
+                      const std::vector<UsdGeomMesh>& meshes,
+                      const std::string& sdf_path = {}) const;
 
 private:
     EnvelopeConfig config_;
