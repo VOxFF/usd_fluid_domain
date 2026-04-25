@@ -26,13 +26,15 @@ struct MaterialStyle {
 const std::unordered_map<ComponentType, std::string> k_prim_paths = {
     {ComponentType::FluidDomain, "/FluidDomain"},
     {ComponentType::Envelope,    "/Envelope"},
+    {ComponentType::Emitter,     "/Emitter"},
     {ComponentType::CfdResults,  "/FluidParticles"},
 };
 
 // Maps each component type to its visual material style.
 const std::unordered_map<ComponentType, MaterialStyle> k_styles = {
-    {ComponentType::FluidDomain, {GfVec3f(0.2f, 0.5f, 0.8f), 0.3f}},
+    {ComponentType::FluidDomain, {GfVec3f(0.2f, 0.5f, 0.8f), 0.30f}},
     {ComponentType::Envelope,    {GfVec3f(0.2f, 0.8f, 0.2f), 0.75f}},
+    {ComponentType::Emitter,     {GfVec3f(1.0f, 0.2f, 0.2f), 0.20f}},
 };
 
 std::string prim_path_for(ComponentType type) {
